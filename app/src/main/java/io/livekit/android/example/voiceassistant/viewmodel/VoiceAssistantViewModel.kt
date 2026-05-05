@@ -5,7 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import io.livekit.android.LiveKit
+import io.livekit.android.example.voiceassistant.fromVsaGateway
 import io.livekit.android.example.voiceassistant.screen.VoiceAssistantRoute
+import io.livekit.android.example.voiceassistant.vsaGatewayUrl
 import io.livekit.android.token.TokenSource
 import io.livekit.android.token.cached
 
@@ -22,10 +24,14 @@ class VoiceAssistantViewModel(application: Application, savedStateHandle: SavedS
     init {
         val (sandboxId, url, token) = savedStateHandle.toRoute<VoiceAssistantRoute>()
 
-        tokenSource = if (sandboxId.isNotEmpty()) {
-            TokenSource.fromSandboxTokenServer(sandboxId = sandboxId).cached()
-        } else {
-            TokenSource.fromLiteral(url, token).cached()
+        tokenSource = when {
+            // VSA gateway path — preferred. Set vsaGatewayUrl in TokenExt.kt.
+            vsaGatewayUrl.isNotEmpty() ->
+                TokenSource.fromVsaGateway().cached()
+            sandboxId.isNotEmpty() ->
+                TokenSource.fromSandboxTokenServer(sandboxId = sandboxId).cached()
+            else ->
+                TokenSource.fromLiteral(url, token).cached()
         }
     }
 
